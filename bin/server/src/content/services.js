@@ -1,6 +1,10 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 export async function getTranscript() {
   const scripts = Array.from(document.getElementsByTagName("script"));
-  const playerScript = scripts.find((s) => s.textContent.includes("ytInitialPlayerResponse"));
+  const playerScript = scripts.find((s) =>
+    s.textContent.includes("ytInitialPlayerResponse"),
+  );
 
   if (!playerScript) throw new Error("YouTube player data not found.");
 
@@ -18,35 +22,35 @@ export async function getTranscript() {
     var data = JSON.parse(match[1]);
   }
 
-  const track = data.captions?.playerCaptionsTracklistRenderer?.captionTracks?.[0];
+  const track =
+    data.captions?.playerCaptionsTracklistRenderer?.captionTracks?.[0];
   if (!track) throw new Error("No transcript available for this video.");
 
   const resp = await fetch(track.baseUrl);
   const xml = await resp.text();
-  
-  return xml.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+
+  return xml
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export async function callAI(transcript) {
   const { gemini_api_key } = await chrome.storage.local.get("gemini_api_key");
   if (!gemini_api_key) throw new Error("API Key not found.");
 
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${gemini_api_key}`;
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [
-            { text: `Summarize this: ${transcript.substring(0, 20000)}` },
-          ],
-        },
-      ],
-    }),
-  });
+  const genAI = new GoogleGenerativeAI(gemini_api_key);
 
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error?.message || "AI failed");
-  return data.candidates[0].content.parts[0].text;
+  const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+
+  try {
+    const prompt = `Summarize this: ${transcript.substring(0, 20000)}`;
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+
+    return response.text();
+  } catch (error) {
+    console.error("AI Error:", error);
+    throw new Error(error.message || "AI failed");
+  }
 }
