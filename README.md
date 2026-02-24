@@ -32,8 +32,9 @@
 - In your terminal, navigate to the [server](./bin/server/) folder in the downloaded
   repository
 - Install dependencies: `npm install`
+- Build the application: `npm run build`
 - In your browser's extension tab, select the `dist` created by the
-  installation
+  build command
 
 ---
 

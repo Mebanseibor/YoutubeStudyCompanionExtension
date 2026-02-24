@@ -1,7 +1,21 @@
 {
   "manifest_version": 3,
   "name": "YouTube study companion",
-  "version": "1.0",
+  "version": "1.0.0",
+  "permissions": ["storage", "activeTab"],
+  "options_page": "options.html",
+  "action": {
+    "default_popup": "index.html"
+  },
+  "background": {
+    "service_worker": "src/content/background.js",
+    "type": "module"
+  },
+  "host_permissions": [
+    "https://*.youtube.com/*",
+    "https://*.google.com/*",
+    "https://generativelanguage.googleapis.com/*"
+  ],
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/watch*"],

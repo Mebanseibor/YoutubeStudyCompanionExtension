@@ -1,4 +1,5 @@
 import "./Hero.css";
+import { getTranscript, callAI } from "../services.js";
 import { useState } from "react";
 import {
   FileText,
@@ -37,12 +38,23 @@ const FEATURES = [
 export default function Hero() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     setIsAnalyzing(true);
-    // Simulate real-time processing
-    setTimeout(() => {
+    try {
+      const transcript = await getTranscript();
+      const result = await callAI(transcript);
+      setSummary(result);
+    } catch (err) {
+      if (err.message.includes("API Key not found")) {
+        if (confirm("API Key missing. Open Settings?")) {
+          chrome.runtime.sendMessage({ action: "OPEN_OPTIONS_PAGE" });
+        }
+      } else {
+        console.error("Analysis Error:", err);
+      }
+    } finally {
       setIsAnalyzing(false);
-    }, 2000);
+    }
   };
 
   return (
