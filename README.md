@@ -18,13 +18,22 @@
 - Personalized experience
 - Productivity tracker
 
-
 ---
 
-## Instruction
+## Building from scratch
 
-- Download the files in the [extensions](./extension/) folder
-- With developer mode on, load the extension into your browser
+### Requirements
+
+- [Nodejs](https://nodejs.org/en)
+
+### Steps
+
+- Clone this repository
+- In your terminal, navigate to the [server](./bin/server/) folder in the downloaded
+  repository
+- Install dependencies: `npm install`
+- In your browser's extension tab, select the `dist` created by the
+  installation
 
 ---
 
