@@ -12,7 +12,7 @@ import {
   Target,
   ChevronLeft,
   Copy,
-  Check
+  Check,
 } from "lucide-react";
 
 const FEATURES = [
@@ -45,19 +45,25 @@ export default function Hero() {
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
-    setSummary(""); 
+    setSummary("");
+
     try {
-      const transcript = await getTranscript();
-      const result = await callAI(transcript);
+      const urlParams = new URLSearchParams(window.location.search);
+      const videoId = urlParams.get("v");
+
+      if (!videoId) {
+        alert("No video ID found.");
+        setIsAnalyzing(false);
+        return;
+      }
+
+      const cleanTranscriptString = await getTranscript(videoId);
+      const result = await callAI(cleanTranscriptString);
+
       setSummary(result);
     } catch (err) {
-      if (err.message.includes("API Key not found")) {
-        if (confirm("API Key missing. Open Settings?")) {
-          chrome.runtime.sendMessage({ action: "OPEN_OPTIONS_PAGE" });
-        }
-      } else {
-        console.error("Analysis Error:", err);
-      }
+      console.error("Analysis Error:", err);
+      setSummary(`Error: ${err.message}`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -92,8 +98,8 @@ export default function Hero() {
           <div className="dashboard-view">
             <section className="vision-statement">
               <p>
-                Transforming YouTube into a personalized learning powerhouse with
-                real-time AI processing.
+                Transforming YouTube into a personalized learning powerhouse
+                with real-time AI processing.
               </p>
             </section>
 
@@ -146,18 +152,20 @@ export default function Hero() {
                 <ChevronLeft size={14} /> Back to Dashboard
               </button>
               <button className="copy-icon-btn" onClick={handleCopy}>
-                {copied ? <Check size={14} color="#22c55e" /> : <Copy size={14} />}
+                {copied ? (
+                  <Check size={14} color="#22c55e" />
+                ) : (
+                  <Copy size={14} />
+                )}
               </button>
             </div>
-            
+
             <div className="summary-wrapper">
               <div className="summary-header-small">
                 <Sparkles size={12} color="#818cf8" />
                 <span>AI VIDEO SUMMARY</span>
               </div>
-              <div className="summary-content">
-                {summary}
-              </div>
+              <div className="summary-content">{summary}</div>
             </div>
           </div>
         )}
