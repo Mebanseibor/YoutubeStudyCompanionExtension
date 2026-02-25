@@ -1,4 +1,5 @@
 import "./Hero.css";
+import FlashCard from "../FlashCard/FlashCard.jsx";
 import { getTranscript, callAI } from "../services.js";
 import { useState } from "react";
 import {
@@ -13,6 +14,7 @@ import {
   ChevronLeft,
   Copy,
   Check,
+  RotateCcw,
 } from "lucide-react";
 
 const FEATURES = [
@@ -40,37 +42,49 @@ const FEATURES = [
 
 export default function Hero() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [summary, setSummary] = useState("");
+  const [summary, setSummary] = useState(null);
   const [copied, setCopied] = useState(false);
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
-    setSummary("");
+    setSummary(null);
 
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const videoId = urlParams.get("v");
 
       if (!videoId) {
-        alert("No video ID found.");
+        alert("Please open a YouTube video first.");
         setIsAnalyzing(false);
         return;
       }
 
-      const cleanTranscriptString = await getTranscript(videoId);
-      const result = await callAI(cleanTranscriptString);
+      // 1. Fetch transcript string
+      const transcript = await getTranscript(videoId);
 
+      // 2. Fetch and deserialize JSON flashcards
+      const result = await callAI(transcript);
       setSummary(result);
     } catch (err) {
       console.error("Analysis Error:", err);
-      setSummary(`Error: ${err.message}`);
+      if (err.message && err.message.includes("API Key not found")) {
+        if (confirm("API Key missing. Open Settings?")) {
+          chrome.runtime.sendMessage({ action: "OPEN_OPTIONS_PAGE" });
+        }
+      } else {
+        setSummary({ error: true, message: err.message });
+      }
     } finally {
       setIsAnalyzing(false);
     }
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(summary);
+    if (!Array.isArray(summary)) return;
+    const textToCopy = summary
+      .map((c) => `Q: ${c.front}\nA: ${c.back}`)
+      .join("\n\n");
+    navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -108,13 +122,11 @@ export default function Hero() {
                 <Clock size={14} className="stat-icon" />
                 <span className="stat-value">--</span>
                 <span className="stat-label">Time Saved</span>
-                <div className="tooltip">Coming Soon</div>
               </div>
               <div className="stat-item">
                 <Target size={14} className="stat-icon" />
                 <span className="stat-value">--</span>
                 <span className="stat-label">Mastery</span>
-                <div className="tooltip">Coming Soon</div>
               </div>
             </div>
 
@@ -126,10 +138,10 @@ export default function Hero() {
               {isAnalyzing ? (
                 <>
                   <Zap size={16} className="spin" />
-                  <span>Analyzing...</span>
+                  <span>Generating Flashcards...</span>
                 </>
               ) : (
-                "Analyze Current Video"
+                "Analyze & Generate Cards"
               )}
             </button>
 
@@ -148,32 +160,60 @@ export default function Hero() {
         ) : (
           <div className="result-view">
             <div className="result-actions">
-              <button className="back-link" onClick={() => setSummary("")}>
+              <button className="back-link" onClick={() => setSummary(null)}>
                 <ChevronLeft size={14} /> Back to Dashboard
               </button>
-              <button className="copy-icon-btn" onClick={handleCopy}>
-                {copied ? (
-                  <Check size={14} color="#22c55e" />
-                ) : (
-                  <Copy size={14} />
-                )}
-              </button>
+              {Array.isArray(summary) && (
+                <button className="copy-icon-btn" onClick={handleCopy}>
+                  {copied ? (
+                    <Check size={14} color="#22c55e" />
+                  ) : (
+                    <Copy size={14} />
+                  )}
+                </button>
+              )}
             </div>
 
             <div className="summary-wrapper">
               <div className="summary-header-small">
-                <Sparkles size={12} color="#818cf8" />
-                <span>AI VIDEO SUMMARY</span>
+                <Layers size={12} color="#818cf8" />
+                <span>STUDY DECK</span>
               </div>
-              <div className="summary-content">{summary}</div>
+
+              <div className="summary-content">
+                {Array.isArray(summary) ? (
+                  <div className="flashcards-list">
+                    {summary.length > 0 ? (
+                      summary.map((card, index) => (
+                        <FlashCard
+                          key={index}
+                          question={card.front}
+                          answer={card.back}
+                        />
+                      ))
+                    ) : (
+                      <p className="empty-msg">
+                        No flashcards could be generated from this video.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="error-box">
+                    <p>{summary.message || "Something went wrong."}</p>
+                    <button onClick={handleAnalyze} className="retry-btn">
+                      <RotateCcw size={14} /> Try Again
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
 
         <footer className="future-footer">
           <p>
-            <span className="footer-highlight">Next Update:</span>{" "}
-            Auto-generated MCQs & Spaced Repetition
+            <span className="footer-highlight">2026 Edition:</span> Running on
+            Gemini 2.5 Flash
           </p>
         </footer>
       </div>

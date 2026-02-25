@@ -5,6 +5,10 @@
 **AI-Powered YouTube Study Companion: A Chrome Extension for Structured**
 **Educational Video Summarization**
 
+<p><img src="./docs/assets/start.png" width="80%" /></p>
+<p><img src="./docs/assets/progress.png" width="80%" /></p>
+<p><img src="./docs/assets/result.png" width="80%" /></p>
+
 </div>
 
 ---
