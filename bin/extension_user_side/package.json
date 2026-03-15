@@ -10,13 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@google/genai": "^1.42.0",
-    "@google/generative-ai": "^0.24.1",
     "lucide-react": "^0.575.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "tailwindcss": "^4.2.1",
-    "youtube-transcript-plus": "^1.2.0"
+    "tailwindcss": "^4.2.1"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.3.0",

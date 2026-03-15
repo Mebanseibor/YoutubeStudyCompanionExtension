@@ -1,6 +1,6 @@
 import "./Hero.css";
 import FlashCard from "../FlashCard/FlashCard.jsx";
-import { getTranscript, callAI } from "../services.js";
+import { getSummary } from "../services.js";
 import { useState } from "react";
 import {
   FileText,
@@ -59,11 +59,11 @@ export default function Hero() {
         return;
       }
 
-      // 1. Fetch transcript string
-      const transcript = await getTranscript(videoId);
+      const { gemini_api_key } =
+        await chrome.storage.local.get("gemini_api_key");
+      if (!gemini_api_key) throw console.error("No API Key found.");
 
-      // 2. Fetch and deserialize JSON flashcards
-      const result = await callAI(transcript);
+      const result = await getSummary(videoId, gemini_api_key);
       setSummary(result);
     } catch (err) {
       console.error("Analysis Error:", err);
