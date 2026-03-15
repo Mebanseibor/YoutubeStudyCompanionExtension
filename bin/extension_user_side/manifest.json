@@ -12,6 +12,7 @@
     "type": "module"
   },
   "host_permissions": [
+    "http://localhost:5000/*",
     "https://*.youtube.com/*",
     "https://*.google.com/*",
     "https://generativelanguage.googleapis.com/*"

@@ -38,8 +38,6 @@ export async function getTranscript(videoId) {
 }
 
 export async function callAI(transcript) {
-  const { gemini_api_key } = await chrome.storage.local.get("gemini_api_key");
-  if (!gemini_api_key) throw new Error("API Key not found.");
 
   const genAI = new GoogleGenerativeAI(gemini_api_key);
   // Using the 2.5-flash model we confirmed earlier
@@ -106,5 +104,24 @@ export async function listAvailableModels() {
     return data.models;
   } catch (error) {
     console.error("Error listing models:", error);
+  }
+}
+
+export async function saveCardsToDB(flashcards) {
+  try {
+    const response = await fetch('http://localhost:5000/api/cards', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(flashcards),
+    });
+
+    if (!response.ok) throw new Error("Failed to save to database");
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Database Save Error:", error);
+    throw error;
   }
 }
