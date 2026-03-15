@@ -22,5 +22,14 @@
       "js": ["./src/content/index.jsx"],
       "run_at": "document_idle"
     }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' http://localhost:5173; object-src 'self'"
+  },
+  "web_accessible_resources": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "resources": ["**/*", "*"]
+    }
   ]
 }
