@@ -1,13 +1,30 @@
+import { Clock } from "lucide-react";
 import React, { useState } from "react";
 
-export default function FlashCard({ question, answer }) {
+export default function FlashCard({
+  question,
+  answer,
+  timestamp,
+  onJumpToTime,
+}) {
   const [isRevealed, setIsRevealed] = useState(false);
 
-  // We use a simple toggle function
+  const formatTime = (seconds) => {
+    if (!seconds && seconds !== 0) return null;
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
   const toggleReveal = (e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsRevealed(!isRevealed);
+  };
+
+  const handleTimestampClick = (e) => {
+    e.stopPropagation();
+    if (onJumpToTime) onJumpToTime(timestamp);
   };
 
   return (
@@ -27,6 +44,53 @@ export default function FlashCard({ question, answer }) {
           font-family: system-ui, -apple-system, sans-serif !important;
         }
 
+        .fc-header-row {
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important; 
+          margin-bottom: 14px !important;
+          padding-bottom: 2px !important;
+        }
+
+        .fc-timestamp {
+          display: inline-flex !important;
+          align-items: center !important;
+          background: #eef2ff !important;
+          color: #4f46e5 !important;
+          font-size: 11px !important;
+          font-weight: 700 !important;
+          padding: 4px 10px !important;
+          border-radius: 6px !important;
+          border: 1px solid #c7d2fe !important;
+          transition: all 0.2s ease !important;
+          cursor: pointer !important;
+        }
+
+        .fc-timestamp {
+          display: inline-flex !important;
+          align-items: center !important;
+          background: #f5f3ff !important; 
+          color: #4f46e5 !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          padding: 4px 10px !important;
+          border-radius: 20px !important; 
+          border: 1px solid #ddd6fe !important;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          cursor: pointer !important;
+        }
+
+        .fc-timestamp:hover {
+          background: #4f46e5 !important;
+          color: #ffffff !important;
+          transform: translateY(-1px) !important; 
+          box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2) !important;
+        }
+
+        .fc-timestamp:active {
+          transform: translateY(0px) !important;
+        }
+
         .fc-section {
           display: block !important;
           width: 100% !important;
@@ -34,11 +98,11 @@ export default function FlashCard({ question, answer }) {
 
         .fc-label {
           display: block !important;
-          font-size: 10px !important;
-          font-weight: 800 !important;
-          color: #4f46e5 !important;
-          margin-bottom: 4px !important;
+          font-size: 11px !important;
+          font-weight: 700 !important;
+          color: #6366f1 !important; 
           text-transform: uppercase !important;
+          letter-spacing: 0.05em !important; 
         }
 
         .fc-text {
@@ -47,7 +111,7 @@ export default function FlashCard({ question, answer }) {
           color: #1f2937 !important;
           margin: 0 0 10px 0 !important;
           line-height: 1.5 !important;
-          white-space: pre-wrap !important; /* Preserves line breaks */
+          white-space: pre-wrap !important;
         }
 
         .fc-answer-box {
@@ -67,15 +131,26 @@ export default function FlashCard({ question, answer }) {
       `}</style>
 
       <div className="fc-container" onClick={toggleReveal}>
-        {/* QUESTION ALWAYS VISIBLE */}
-        <div className="fc-section">
+        <div className="fc-header-row">
           <span className="fc-label">Question</span>
+          {timestamp && (
+            <div className="fc-timestamp" onClick={handleTimestampClick}>
+              <Clock
+                size={12}
+                strokeWidth={2.5}
+                style={{ marginRight: "6px" }}
+              />
+              <span>{formatTime(timestamp)}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="fc-section">
           <p className="fc-text" style={{ fontWeight: "600" }}>
             {question}
           </p>
         </div>
 
-        {/* ANSWER - Conditionallly Rendered */}
         {isRevealed ? (
           <div className="fc-section fc-answer-box">
             <span className="fc-label" style={{ color: "#059669" }}>

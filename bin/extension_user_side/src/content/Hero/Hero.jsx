@@ -51,8 +51,22 @@ export default function Hero() {
     setSummary(null);
 
     try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const videoId = urlParams.get("v");
+      let videoId = null;
+
+      // Context Check: Are we in the Popup or on the Page?
+      if (chrome.tabs && chrome.tabs.query) {
+        // We are in the POPUP
+        const [tab] = await chrome.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
+        const url = new URL(tab.url);
+        videoId = url.searchParams.get("v");
+      } else {
+        // We are in the CONTENT SCRIPT (injected on the page)
+        const urlParams = new URLSearchParams(window.location.search);
+        videoId = urlParams.get("v");
+      }
 
       if (!videoId) {
         alert("Please open a YouTube video first.");
@@ -62,7 +76,7 @@ export default function Hero() {
 
       const { gemini_api_key } =
         await chrome.storage.local.get("gemini_api_key");
-      if (!gemini_api_key) throw new Error("API Key not found");  
+      if (!gemini_api_key) throw new Error("API Key not found");
 
       const result = await getSummary(videoId, gemini_api_key);
       setSummary(result);
@@ -77,6 +91,32 @@ export default function Hero() {
       }
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const handleJumpToTime = async (seconds) => {
+    if (chrome.scripting) {
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: (time) => {
+          const video = document.querySelector("video");
+          if (video) {
+            video.currentTime = time;
+            video.play();
+          }
+        },
+        args: [seconds],
+      });
+    } else {
+      const video = document.querySelector("video");
+      if (video) {
+        video.currentTime = seconds;
+        video.play();
+      }
     }
   };
 
@@ -189,6 +229,8 @@ export default function Hero() {
                           key={index}
                           question={card.front}
                           answer={card.back}
+                          timestamp={card.timestamp}
+                          onJumpToTime={handleJumpToTime}
                         />
                       ))
                     ) : (
@@ -213,7 +255,7 @@ export default function Hero() {
         <footer className="future-footer">
           <p>
             <span className="footer-highlight">2026 Edition:</span> Running on
-            Gemini 2.5 Flash
+            Gemini 3 Flash
           </p>
         </footer>
       </div>

@@ -2,29 +2,28 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function callAI(geminiKey, transcript) {
   const genAI = new GoogleGenerativeAI(geminiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-  const trimmedTranscipt = transcript.substring(0, 25000);
-  console.log(trimmedTranscipt);
+  const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
   try {
     const prompt = `
       Extract the most important educational concepts from this transcript.
       For each concept, identify the correct timestamp from the [000.00s] markers.
+      Ignore message from a sponsor
 
       Return ONLY a valid JSON array. No prose.
 
       SCHEMA:
-      [
-        { 
-          "front": "The concept name", 
-          "back": "The explanation", 
-          "timestamp": "The [00.00s] value where this is first mentioned" 
-        }
-      ]
+        [
+          { 
+            "front": "Term", 
+            "back": "Definition", 
+            "timestamp": 123.45 
+          }
+        ]
+        NOTE: The timestamp must be a NUMBER representing seconds. Do not include 's' or brackets.
 
       TRANSCRIPT:
-      ${trimmedTranscipt}`;
+      ${transcript}`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
