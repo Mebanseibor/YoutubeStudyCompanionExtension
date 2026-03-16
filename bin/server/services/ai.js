@@ -4,39 +4,40 @@ export async function callAI(geminiKey, transcript) {
   const genAI = new GoogleGenerativeAI(geminiKey);
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
+  const trimmedTranscipt = transcript.substring(0, 25000);
+  console.log(trimmedTranscipt);
+
   try {
     const prompt = `
-    Extract the most important educational concepts from this transcript and format them as flashcards.
-    Return ONLY a valid JSON array of objects. No prose, no markdown, no backticks.
+      Extract the most important educational concepts from this transcript.
+      For each concept, identify the correct timestamp from the [000.00s] markers.
 
-    SCHEMA:
-    [
-      { "front": "A clear, concise question or term", "back": "A brief, factual answer" }
-    ]
+      Return ONLY a valid JSON array. No prose.
 
-    EXAMPLE:
-    [
-      { "front": "Photosynthesis", "back": "The process by which plants use sunlight to synthesize foods from carbon dioxide and water." }
-    ]
+      SCHEMA:
+      [
+        { 
+          "front": "The concept name", 
+          "back": "The explanation", 
+          "timestamp": "The [00.00s] value where this is first mentioned" 
+        }
+      ]
 
-    TRANSCRIPT:
-    ${transcript.substring(0, 25000)}`;
+      TRANSCRIPT:
+      ${trimmedTranscipt}`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     let text = response.text();
 
-    // CLEANING THE STRING
-    // 1. Remove Markdown code blocks if present (```json ... ```)
     const cleanedJson = text.replace(/```json|```/gi, "").trim();
 
-    // 2. Parse the JSON
     const flashcards = JSON.parse(cleanedJson);
 
-    return flashcards; // This is now an Array of objects
+    return flashcards;
   } catch (error) {
     console.error("Flashcard Deserialization Error:", error);
-    // Fallback: If JSON parsing fails, return a friendly error in card format
+
     throw new Error(`AI_PROCESSING_FAILED: ${error.message}`);
   }
 }

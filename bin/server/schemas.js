@@ -6,6 +6,7 @@ export const VideoSummarySchema = new mongoose.Schema({
     {
       front: String,
       back: String,
+      timestamp: String,
     },
   ],
   createdAt: { type: Date, default: Date.now },
