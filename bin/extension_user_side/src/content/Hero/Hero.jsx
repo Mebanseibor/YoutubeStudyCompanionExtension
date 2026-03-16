@@ -16,6 +16,7 @@ import {
   Check,
   RotateCcw,
 } from "lucide-react";
+import { appName } from "../../../constants/app.js";
 
 const FEATURES = [
   {
@@ -61,7 +62,7 @@ export default function Hero() {
 
       const { gemini_api_key } =
         await chrome.storage.local.get("gemini_api_key");
-      if (!gemini_api_key) throw console.error("No API Key found.");
+      if (!gemini_api_key) throw new Error("API Key not found");  
 
       const result = await getSummary(videoId, gemini_api_key);
       setSummary(result);
@@ -97,8 +98,7 @@ export default function Hero() {
             <div className="logo-wrapper">
               <Sparkles size={16} className="logo-icon" />
             </div>
-            <h2 className="hero-title">YouTube Study Companion</h2>
-            <span className="hero-badge">Pro</span>
+            <h2 className="hero-title">{appName}</h2>
           </div>
           <div className="status-indicator">
             <span className={`status-text ${isAnalyzing ? "analyzing" : ""}`}>
