@@ -4,8 +4,9 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { VideoSummarySchema } from "./schemas.js";
 import { videoSummaryCollection } from "./collections.js";
-import { getTranscript } from "./services/youtube.js"
+import { getTranscript, getVideoDetails } from "./services/youtube.js"
 import { callAI } from "./services/ai.js"
+import { google } from 'googleapis';
 
 dotenv.config();
 const app = express();
@@ -20,11 +21,14 @@ mongoose
 
 const VideoSummary = mongoose.model(videoSummaryCollection, VideoSummarySchema);
 
+const youtube = google.youtube('v3');
+const googleCloudAPIKey = process.env.GOOGLE_CLOUD_API_KEY
+
 app.post("/api/cards", async (req, res) => {
   try {
     const { videoId, geminiKey } = req.body;
 
-    const existing = await VideoSummary.findOne({ videoId });
+    const existing = await VideoSummary.findOne({ "videoDetails.videoId": videoId });
     if (existing) {
       return res.json(existing.cards);
     }
@@ -33,12 +37,13 @@ app.post("/api/cards", async (req, res) => {
     const aiResult = await callAI(geminiKey, transcript);
 
     const newEntry = new VideoSummary({
-      videoId: videoId,
       cards: aiResult,
+      videoDetails: await getVideoDetails(youtube, videoId, googleCloudAPIKey),
     });
 
     await newEntry.save();
 
+    console.log(`Processed ${newEntry.videoDetails.videoId}`)
     res.status(201).json(aiResult);
   } catch (err) {
     console.error("Server Error:", err);

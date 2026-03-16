@@ -1,4 +1,5 @@
 import { fetchTranscript } from "youtube-transcript-plus";
+import { formatVideoDetails } from "../schemas.js";
 
 export async function getTranscript(videoId) {
   try {
@@ -23,5 +24,22 @@ export async function getTranscript(videoId) {
   } catch (err) {
     console.error("Transcript Service Error:", err);
     throw err;
+  }
+}
+
+export async function getVideoDetails(youtube, videoId, apiKey) {
+  try {
+    const response = await youtube.videos.list({
+      key: apiKey,
+      part: 'snippet,statistics',
+      id: videoId
+    });
+
+    const video = response.data.items[0];
+    if (!video) throw new Error("Video not found");
+
+    return formatVideoDetails(video);
+  } catch (error) {
+    console.error("API Error:", error);
   }
 }

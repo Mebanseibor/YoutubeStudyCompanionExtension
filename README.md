@@ -30,6 +30,8 @@
 
 - [Nodejs](https://nodejs.org/en)
 - [Docker](https://www.docker.com/)
+- [Google Cloud](https://console.cloud.google.com) API key:
+  - With [YouTube Data API v3](https://console.cloud.google.com/apis/api/youtube.googleapis.com/) enabled
 
 ### Steps
 
@@ -47,13 +49,18 @@
   - Install dependencies: `npm install`
   - Running the mongodb server:
     - Set up the environment vaiables:
+
       ```bash
       PORT=yourPort
       MONGODB_USER=root
       MONGODB_PASSWORD=yourPassword
       MONGODB_URI=mongodb://root:yourPassword@localhost:27017
+
+      GOOGLE_CLOUD_API_KEY=yourGoogleCloudAPIKey
       ```
+
     - Run the docker compose command: `docker compose up`
+
   - Wait for the mongodb server to spin up
   - Run the server: `node server.js`
 

@@ -53,9 +53,7 @@ export default function Hero() {
     try {
       let videoId = null;
 
-      // Context Check: Are we in the Popup or on the Page?
       if (chrome.tabs && chrome.tabs.query) {
-        // We are in the POPUP
         const [tab] = await chrome.tabs.query({
           active: true,
           currentWindow: true,
@@ -63,7 +61,6 @@ export default function Hero() {
         const url = new URL(tab.url);
         videoId = url.searchParams.get("v");
       } else {
-        // We are in the CONTENT SCRIPT (injected on the page)
         const urlParams = new URLSearchParams(window.location.search);
         videoId = urlParams.get("v");
       }
@@ -86,6 +83,13 @@ export default function Hero() {
         if (confirm("API Key missing. Open Settings?")) {
           chrome.runtime.sendMessage({ action: "OPEN_OPTIONS_PAGE" });
         }
+      } else if (
+        err.message.includes("This model is currently experiencing high demand")
+      ) {
+        setSummary({
+          error: true,
+          message: "This model is currently experiencing high demand",
+        });
       } else {
         setSummary({ error: true, message: err.message });
       }
