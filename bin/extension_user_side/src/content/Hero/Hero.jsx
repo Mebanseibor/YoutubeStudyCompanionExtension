@@ -5,21 +5,16 @@ import {
   getSummaryFromLocalLLM,
   getTranscript,
 } from "../services.js";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  FileText,
   Layers,
   Sparkles,
   Zap,
-  Clock,
-  Target,
   ChevronLeft,
   Copy,
   Check,
   RotateCcw,
   AlertOctagon,
-  BrainCircuit,
-  Database,
 } from "lucide-react";
 import {
   appName,
@@ -28,33 +23,22 @@ import {
   llmOptions,
 } from "../../../constants/app.js";
 
-const FEATURES = [
-  {
-    icon: <FileText size={18} color="#818cf8" />,
-    label: "AI Summary",
-    desc: "Concise video overviews",
-  },
-  {
-    icon: <BrainCircuit size={18} color="#f472b6" />,
-    label: "Quiz Mode",
-    desc: "Auto-generated MCQs",
-  },
-  {
-    icon: <Layers size={18} color="#fbbf24" />,
-    label: "Flashcards",
-    desc: "Active recall & SR",
-  },
-  {
-    icon: <Database size={18} color="#22c55e" />,
-    label: "Local First",
-    desc: "Private offline storage",
-  },
-];
-
 export default function Hero() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [summary, setSummary] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [selectedModel, setSelectedModel] = useState("Loading...");
+
+  useEffect(() => {
+    chrome.storage.local.get([chromeStorageKeys.llmOption], (result) => {
+      if (result.llmOption) {
+        const modelName = result.llmOption.split(':')[0].toUpperCase();
+        setSelectedModel(modelName);
+      } else {
+        setSelectedModel("Not chosen yet");
+      }
+    });
+  }, []);
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
@@ -85,7 +69,10 @@ export default function Hero() {
       const settings = await chrome.storage.local.get([
         chromeStorageKeys.llmOption,
         chromeStorageKeys.geminiAPIKey,
-      ]);
+      ])
+
+      setSelectedModel(settings[chromeStorageKeys.llmOption])
+
       if (settings[chromeStorageKeys.llmOption] === llmOptions.local) {
         const transcript = await getTranscript(videoId);
 
@@ -198,19 +185,6 @@ export default function Hero() {
               </p>
             </section>
 
-            <div className="stats-row">
-              <div className="stat-item">
-                <Clock size={14} className="stat-icon" />
-                <span className="stat-value">--</span>
-                <span className="stat-label">Time Saved</span>
-              </div>
-              <div className="stat-item">
-                <Target size={14} className="stat-icon" />
-                <span className="stat-value">--</span>
-                <span className="stat-label">Mastery</span>
-              </div>
-            </div>
-
             <button
               className={`hero-btn ${isAnalyzing ? "loading" : ""}`}
               onClick={handleAnalyze}
@@ -226,17 +200,6 @@ export default function Hero() {
               )}
             </button>
 
-            <div className="feature-grid">
-              {FEATURES.map((f, i) => (
-                <div key={i} className="feature-item">
-                  <div className="icon-container">{f.icon}</div>
-                  <div>
-                    <p className="feature-label">{f.label}</p>
-                    <p className="feature-desc">{f.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         ) : (
           <div className="result-view">
@@ -305,9 +268,7 @@ export default function Hero() {
 
         <footer className="future-footer">
           <p>
-            <span className="footer-highlight">2026 Edition:</span> Running on
-            Gemini 3 Flash
-          </p>
+             Running: <span className="footer-highlight">{ selectedModel }</span></p>
         </footer>
       </div>
     </div>

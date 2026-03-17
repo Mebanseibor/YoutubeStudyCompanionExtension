@@ -1,0 +1,35 @@
+.feature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 1px dashed #333;
+}
+
+.feature-item {
+  display: flex;
+  gap: 10px;
+}
+
+.icon-container {
+  background: #1a1a1a;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  height: fit-content;
+}
+
+.feature-label {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.feature-desc {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  line-height: 1.2;
+}
