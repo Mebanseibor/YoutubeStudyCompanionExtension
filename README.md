@@ -26,7 +26,7 @@
 
 ## Building from scratch
 
-### Without server
+### Without community server (Only local LLM)
 
 #### Requirements
 
@@ -37,7 +37,9 @@
 
 - Clone this repository
 
-- <p id="building-the-extension-pack">Build the extension pack</p>
+<p id="building-the-extension-pack"></p>
+
+- Build the extension pack
   - In your terminal, navigate to the [extension folder](./bin/extension_user_side/) in the downloaded
     repository
   - Install dependencies: `npm install`
@@ -45,26 +47,31 @@
   - In your browser's extension tab, select the `dist` created by the
     build command
 
+> [!Tip]
+> Set up a system variable for Ollama if the Ollama command is not available
+> on your terminal
+
 - Configure Ollama:
-  > [!Tip]
-  > Set up a system variable for Ollama if the Ollama command is not available
-  > on your terminal
   - Download phi3.5:3.8b-mini-instruct-q4_K_M model:
     - `ollama pull phi3.5:3.8b-mini-instruct-q4_K_M`
   - Completely close Ollama
   - Open terminal
     - Enable Ollama to expect origin requests from the desired locations:
+      - Powershell
 
-      ```powershell
-      $env:OLLAMA_ORIGINS="chrome-extension://*, http://localhost:*, https://www.youtube.com"
-      ```
+        ```powershell
+        $env:OLLAMA_ORIGINS="chrome-extension://*, http://localhost:*, https://www.youtube.com"
+        ```
 
-      ```cmd
-      set OLLAMA_ORIGINS=chrome-extension://*,http://localhost:*,https://www.youtube.com
-      ```
+      - Command prompt
+
+        ```cmd
+        set OLLAMA_ORIGINS=chrome-extension://*,http://localhost:*,https://www.youtube.com
+        ```
+
   - Serve Ollama: `ollama serve`
 
-### With server
+### With community server
 
 #### Requirements
 

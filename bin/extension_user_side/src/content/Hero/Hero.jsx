@@ -1,20 +1,11 @@
 import "./Hero.css";
-import FlashCard from "../FlashCard/FlashCard.jsx";
 import {
   getSummaryFromGeminiAPI,
   getSummaryFromLocalLLM,
   getTranscript,
 } from "../services.js";
 import { useState, useEffect } from "react";
-import {
-  Layers,
-  Sparkles,
-  ChevronLeft,
-  Copy,
-  Check,
-  RotateCcw,
-  AlertOctagon,
-} from "lucide-react";
+import { Sparkles } from "lucide-react";
 import {
   appName,
   getPromptWithTranscript,
@@ -22,17 +13,17 @@ import {
   llmOptions,
 } from "../../../constants/app.js";
 import CallToAction from "./CallToAction/CallToAction.jsx";
+import SummaryResult from "./SummaryResult/SummaryResult.jsx";
 
 export default function Hero() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [summary, setSummary] = useState(null);
-  const [copied, setCopied] = useState(false);
   const [selectedModel, setSelectedModel] = useState("Loading...");
 
   useEffect(() => {
     chrome.storage.local.get([chromeStorageKeys.llmOption], (result) => {
       if (result.llmOption) {
-        const modelName = result.llmOption.split(':')[0].toUpperCase();
+        const modelName = result.llmOption.split(":")[0].toUpperCase();
         setSelectedModel(modelName);
       } else {
         setSelectedModel("Not chosen yet");
@@ -69,9 +60,9 @@ export default function Hero() {
       const settings = await chrome.storage.local.get([
         chromeStorageKeys.llmOption,
         chromeStorageKeys.geminiAPIKey,
-      ])
+      ]);
 
-      setSelectedModel(settings[chromeStorageKeys.llmOption])
+      setSelectedModel(settings[chromeStorageKeys.llmOption]);
 
       if (settings[chromeStorageKeys.llmOption] === llmOptions.local) {
         const transcript = await getTranscript(videoId);
@@ -122,42 +113,6 @@ export default function Hero() {
     }
   };
 
-  const handleJumpToTime = async (seconds) => {
-    if (chrome.scripting) {
-      const [tab] = await chrome.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-      chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: (time) => {
-          const video = document.querySelector("video");
-          if (video) {
-            video.currentTime = time;
-            video.play();
-          }
-        },
-        args: [seconds],
-      });
-    } else {
-      const video = document.querySelector("video");
-      if (video) {
-        video.currentTime = seconds;
-        video.play();
-      }
-    }
-  };
-
-  const handleCopy = () => {
-    if (!Array.isArray(summary)) return;
-    const textToCopy = summary
-      .map((c) => `Q: ${c.front}\nA: ${c.back}`)
-      .join("\n\n");
-    navigator.clipboard.writeText(textToCopy);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   return (
     <div className="extension-container">
       <div className="hero-card">
@@ -179,73 +134,17 @@ export default function Hero() {
         {!summary ? (
           <CallToAction isActive={isAnalyzing} onClickAction={handleAnalyze} />
         ) : (
-          <div className="result-view">
-            <div className="result-actions">
-              <button className="back-link" onClick={() => setSummary(null)}>
-                <ChevronLeft size={14} /> Back to Dashboard
-              </button>
-              {Array.isArray(summary) && (
-                <button className="copy-icon-btn" onClick={handleCopy}>
-                  {copied ? (
-                    <Check size={14} color="#22c55e" />
-                  ) : (
-                    <Copy size={14} />
-                  )}
-                </button>
-              )}
-            </div>
-
-            <div className="summary-wrapper">
-              <div className="summary-header-small">
-                <Layers size={12} color="#818cf8" />
-                <span>STUDY DECK</span>
-              </div>
-
-              <div className="summary-content">
-                {Array.isArray(summary) ? (
-                  <div className="flashcards-list">
-                    {summary.length > 0 ? (
-                      summary.map((card, index) => (
-                        <FlashCard
-                          key={index}
-                          question={card.front}
-                          answer={card.back}
-                          timestamp={card.timestamp}
-                          onJumpToTime={handleJumpToTime}
-                        />
-                      ))
-                    ) : (
-                      <p className="empty-msg">
-                        No flashcards could be generated from this video.
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="error-box">
-                    <div className="error-icon-wrapper">
-                      <AlertOctagon size={32} />
-                    </div>
-                    <div className="error-text-content">
-                      <h3>Analysis Interrupted</h3>
-                      <p>
-                        {summary.message ||
-                          "The local model took too long to respond or the connection was lost."}
-                      </p>
-                    </div>
-                    <button onClick={handleAnalyze} className="retry-btn">
-                      <RotateCcw size={16} />
-                      <span>Try Again</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <SummaryResult
+            summary={summary}
+            onRetry={handleAnalyze}
+            setSummary={setSummary}
+          />
         )}
 
         <footer className="future-footer">
           <p>
-             Running: <span className="footer-highlight">{ selectedModel }</span></p>
+            Running: <span className="footer-highlight">{selectedModel}</span>
+          </p>
         </footer>
       </div>
     </div>
