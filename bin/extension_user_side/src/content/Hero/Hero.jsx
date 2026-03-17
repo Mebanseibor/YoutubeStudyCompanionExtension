@@ -1,12 +1,14 @@
 import "./Hero.css";
 import FlashCard from "../FlashCard/FlashCard.jsx";
-import { getSummary } from "../services.js";
+import {
+  getSummaryFromGeminiAPI,
+  getSummaryFromLocalLLM,
+  getTranscript,
+} from "../services.js";
 import { useState } from "react";
 import {
   FileText,
-  MapPin,
   Layers,
-  BarChart3,
   Sparkles,
   Zap,
   Clock,
@@ -15,8 +17,16 @@ import {
   Copy,
   Check,
   RotateCcw,
+  AlertOctagon,
+  BrainCircuit,
+  Database,
 } from "lucide-react";
-import { appName } from "../../../constants/app.js";
+import {
+  appName,
+  getPromptWithTranscript,
+  chromeStorageKeys,
+  llmOptions,
+} from "../../../constants/app.js";
 
 const FEATURES = [
   {
@@ -25,19 +35,19 @@ const FEATURES = [
     desc: "Concise video overviews",
   },
   {
-    icon: <MapPin size={18} color="#f472b6" />,
-    label: "Timestamps",
-    desc: "Auto-topic segmentation",
+    icon: <BrainCircuit size={18} color="#f472b6" />,
+    label: "Quiz Mode",
+    desc: "Auto-generated MCQs",
   },
   {
     icon: <Layers size={18} color="#fbbf24" />,
     label: "Flashcards",
-    desc: "Spaced repetition ready",
+    desc: "Active recall & SR",
   },
   {
-    icon: <BarChart3 size={18} color="#22c55e" />,
-    label: "Insights",
-    desc: "Productivity tracking",
+    icon: <Database size={18} color="#22c55e" />,
+    label: "Local First",
+    desc: "Private offline storage",
   },
 ];
 
@@ -71,11 +81,38 @@ export default function Hero() {
         return;
       }
 
-      const { gemini_api_key } =
-        await chrome.storage.local.get("gemini_api_key");
-      if (!gemini_api_key) throw new Error("API Key not found");
+      let result;
+      const settings = await chrome.storage.local.get([
+        chromeStorageKeys.llmOption,
+        chromeStorageKeys.geminiAPIKey,
+      ]);
+      if (settings[chromeStorageKeys.llmOption] === llmOptions.local) {
+        const transcript = await getTranscript(videoId);
 
-      const result = await getSummary(videoId, gemini_api_key);
+        const resultLLM = await getSummaryFromLocalLLM(
+          getPromptWithTranscript(transcript),
+        );
+
+        if (resultLLM.error) {
+          throw new Error(resultLLM.message);
+        }
+
+        let rawText = resultLLM.summary || "";
+        const cleanedJson = rawText.replace(/```json|```/gi, "").trim();
+
+        result = JSON.parse(cleanedJson);
+        console.log("Success:", result);
+      } else {
+        const { gemini_api_key } = await chrome.storage.local.get(
+          chromeStorageKeys.llmOptionGeminiAPI,
+        );
+        if (!gemini_api_key) {
+          throw new Error("API Key not found");
+        }
+
+        result = await getSummaryFromGeminiAPI(videoId, gemini_api_key);
+      }
+
       setSummary(result);
     } catch (err) {
       console.error("Analysis Error:", err);
@@ -245,9 +282,19 @@ export default function Hero() {
                   </div>
                 ) : (
                   <div className="error-box">
-                    <p>{summary.message || "Something went wrong."}</p>
+                    <div className="error-icon-wrapper">
+                      <AlertOctagon size={32} />
+                    </div>
+                    <div className="error-text-content">
+                      <h3>Analysis Interrupted</h3>
+                      <p>
+                        {summary.message ||
+                          "The local model took too long to respond or the connection was lost."}
+                      </p>
+                    </div>
                     <button onClick={handleAnalyze} className="retry-btn">
-                      <RotateCcw size={14} /> Try Again
+                      <RotateCcw size={16} />
+                      <span>Try Again</span>
                     </button>
                   </div>
                 )}

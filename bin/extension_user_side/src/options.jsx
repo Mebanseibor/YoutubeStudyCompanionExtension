@@ -8,31 +8,49 @@ import {
   ShieldCheck,
   CheckCircle2,
   Loader2,
+  Cpu,
+  Cloud,
 } from "lucide-react";
 import "./index.css";
 import { appName } from "../constants/app.js";
+import { llmOptions, chromeStorageKeys } from "../constants/app.js";
 
 export default function Options() {
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [status, setStatus] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [modelType, setModelType] = useState(llmOptions.gemini);
 
   useEffect(() => {
-    chrome.storage.local.get(["gemini_api_key"], (result) => {
-      if (result.gemini_api_key) setApiKey(result.gemini_api_key);
-    });
+    chrome.storage.local.get(
+      [chromeStorageKeys.geminiAPIKey, chromeStorageKeys.llmOption],
+      (result) => {
+        if (result[chromeStorageKeys.geminiAPIKey]) {
+          setApiKey(result[chromeStorageKeys.geminiAPIKey]);
+        }
+        if (result[chromeStorageKeys.llmOption]) {
+          setModelType(result[chromeStorageKeys.llmOption]);
+        }
+      },
+    );
   }, []);
 
   const saveKey = () => {
     setIsSaving(true);
-    chrome.storage.local.set({ gemini_api_key: apiKey }, () => {
-      setTimeout(() => {
-        setIsSaving(false);
-        setStatus("Settings saved successfully!");
-        setTimeout(() => setStatus(""), 3000);
-      }, 500);
-    });
+    chrome.storage.local.set(
+      {
+        [chromeStorageKeys.geminiAPIKey]: apiKey,
+        [chromeStorageKeys.llmOption]: modelType,
+      },
+      () => {
+        setTimeout(() => {
+          setIsSaving(false);
+          setStatus("Settings saved successfully!");
+          setTimeout(() => setStatus(""), 3000);
+        }, 500);
+      },
+    );
   };
 
   return (
@@ -53,7 +71,42 @@ export default function Options() {
         </header>
 
         <main className="p-10 space-y-8 flex-grow flex flex-col justify-center">
-          <div className="space-y-3">
+          {/* Model Selection Toggle */}
+          <div className="space-y-4">
+            <label className="flex items-center gap-2 text-base font-medium text-slate-700">
+              <Cpu size={16} className="text-slate-400" />
+              Inference Engine
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => setModelType("gemini")}
+                className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all ${
+                  modelType === llmOptions.gemini
+                    ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm"
+                    : "border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200"
+                }`}
+              >
+                <Cloud size={20} />
+                <span className="font-bold">Gemini API</span>
+              </button>
+              <button
+                onClick={() => setModelType("local")}
+                className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all ${
+                  modelType === llmOptions.local
+                    ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm"
+                    : "border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200"
+                }`}
+              >
+                <Cpu size={20} />
+                <span className="font-bold">Local LLM (Ollama)</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Conditional API Key Input */}
+          <div
+            className={`space-y-3 transition-opacity duration-300 ${modelType === "local" ? "opacity-40 pointer-events-none" : "opacity-100"}`}
+          >
             <label className="flex items-center gap-2 text-base font-medium text-slate-700">
               <Key size={16} className="text-slate-400" />
               Gemini API Key
@@ -64,16 +117,23 @@ export default function Options() {
                 type={showKey ? "text" : "password"}
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Enter your API key..."
-                className="w-full pl-5 pr-14 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400 text-lg text-slate-900"
+                placeholder={
+                  modelType === "local"
+                    ? "Not required for local LLM"
+                    : "Enter your API key..."
+                }
+                disabled={modelType === "local"}
+                className="w-full pl-5 pr-14 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400 text-lg text-slate-900 disabled:cursor-not-allowed"
               />
-              <button
-                type="button"
-                onClick={() => setShowKey(!showKey)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-blue-600 hover:bg-white rounded-md transition-colors"
-              >
-                {showKey ? <EyeOff size={22} /> : <Eye size={22} />}
-              </button>
+              {modelType === "gemini" && (
+                <button
+                  type="button"
+                  onClick={() => setShowKey(!showKey)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-blue-600 hover:bg-white rounded-md transition-colors"
+                >
+                  {showKey ? <EyeOff size={22} /> : <Eye size={22} />}
+                </button>
+              )}
             </div>
 
             <p className="text-sm text-slate-500 leading-relaxed">

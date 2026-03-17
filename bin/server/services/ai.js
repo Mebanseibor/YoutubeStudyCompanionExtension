@@ -6,24 +6,23 @@ export async function callAI(geminiKey, transcript) {
 
   try {
     const prompt = `
-      Extract the most important educational concepts from this transcript.
-      For each concept, identify the correct timestamp from the [000.00s] markers.
-      Ignore message from a sponsor
+### Task:
+Generate high-quality educational flashcards (Question/Answer pairs) based ONLY on the provided transcript. 
 
-      Return ONLY a valid JSON array. No prose.
+### Rules:
+1. OUTPUT ONLY A VALID JSON ARRAY. NO PREAMBLE. NO PROSE.
+2. 'front': A clear, concise question about a concept or fact from the transcript.
+3. 'back': A direct, accurate answer based strictly on the transcript context.
+4. 'timestamp': The exact NUMBER (seconds only) from the [brackets] where the answer starts.
+5. If a section is a sponsor or rambling (e.g., "uh", "hello"), SKIP IT.
+6. If no educational content is found, return an empty array [].
 
-      SCHEMA:
-        [
-          { 
-            "front": "Term", 
-            "back": "Definition", 
-            "timestamp": 123.45 
-          }
-        ]
-        NOTE: The timestamp must be a NUMBER representing seconds. Do not include 's' or brackets.
+### Example:
+Transcript: [45.20s] Photosynthesis is how plants turn sunlight into energy.
+Response: [{"front": "How do plants convert sunlight into energy?", "back": "Through a process called photosynthesis.", "timestamp": 45.20}]
 
-      TRANSCRIPT:
-      ${transcript}`;
+### Transcript:
+${transcript}`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;

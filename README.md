@@ -26,23 +26,58 @@
 
 ## Building from scratch
 
-### Requirements
+### Without server
+
+#### Requirements
 
 - [Nodejs](https://nodejs.org/en)
-- [Docker](https://www.docker.com/)
-- [Google Cloud](https://console.cloud.google.com) API key:
-  - With [YouTube Data API v3](https://console.cloud.google.com/apis/api/youtube.googleapis.com/) enabled
+- [Ollama](https://ollama.com/)
 
-### Steps
+#### Steps
 
 - Clone this repository
-- Building the extension pack:
+
+- <p id="building-the-extension-pack">Build the extension pack</p>
   - In your terminal, navigate to the [extension folder](./bin/extension_user_side/) in the downloaded
     repository
   - Install dependencies: `npm install`
   - Build the application: `npm run build`
   - In your browser's extension tab, select the `dist` created by the
     build command
+
+- Configure Ollama:
+  > [!Tip]
+  > Set up a system variable for Ollama if the Ollama command is not available
+  > on your terminal
+  - Download phi3.5:3.8b-mini-instruct-q4_K_M model:
+    - `ollama pull phi3.5:3.8b-mini-instruct-q4_K_M`
+  - Completely close Ollama
+  - Open terminal
+    - Enable Ollama to expect origin requests from the desired locations:
+
+      ```powershell
+      $env:OLLAMA_ORIGINS="chrome-extension://*, http://localhost:*, https://www.youtube.com"
+      ```
+
+      ```cmd
+      set OLLAMA_ORIGINS=chrome-extension://*,http://localhost:*,https://www.youtube.com
+      ```
+  - Serve Ollama: `ollama serve`
+
+### With server
+
+#### Requirements
+
+- [Nodejs](https://nodejs.org/en)
+- [Docker](https://www.docker.com/)
+- [Google Cloud](https://console.cloud.google.com) API key:
+  - With [YouTube Data API v3](https://console.cloud.google.com/apis/api/youtube.googleapis.com/) enabled
+
+#### Steps
+
+- Clone this repository
+- Building the extension pack:
+  - Refer to [this](#building-the-extension-pack)
 
 - Running the server:
   - In your terminal, navigate to the [server folder](./bin/server/)
