@@ -42,7 +42,7 @@ export default function ShortMenu() {
           onClick={openOptions}
           className="p-1 hover:bg-slate-100 rounded-full transition-colors text-slate-400 border-none bg-transparent"
         >
-          <Settings size={18} />
+          <Settings size={12} />
         </button>
       </div>
 

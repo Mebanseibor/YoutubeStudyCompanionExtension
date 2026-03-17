@@ -221,6 +221,12 @@
   overflow-y: auto;
 }
 
+.summary-header-small{
+  font-size: 12px;
+  font-weight: 500;
+  margin: 4px 0px;
+}
+
 .error-box {
   display: flex;
   flex-direction: column;

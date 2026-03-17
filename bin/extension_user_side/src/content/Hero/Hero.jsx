@@ -5,7 +5,7 @@ import {
   getTranscript,
 } from "../services.js";
 import { useState, useEffect } from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, ChevronUp, ChevronDown } from "lucide-react";
 import {
   appName,
   getPromptWithTranscript,
@@ -14,22 +14,28 @@ import {
 } from "../../../constants/app.js";
 import CallToAction from "./CallToAction/CallToAction.jsx";
 import SummaryResult from "./SummaryResult/SummaryResult.jsx";
+import ModelList from "../ModelList/ModelList.jsx";
 
 export default function Hero() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [summary, setSummary] = useState(null);
   const [selectedModel, setSelectedModel] = useState("Loading...");
+  const [isModelListOpen, setIsModelListOpen] = useState(false);
 
   useEffect(() => {
     chrome.storage.local.get([chromeStorageKeys.llmOption], (result) => {
-      if (result.llmOption) {
-        const modelName = result.llmOption.split(":")[0].toUpperCase();
-        setSelectedModel(modelName);
+      if (result[chromeStorageKeys.llmOption]) {
+        setSelectedModel(result[chromeStorageKeys.llmOption]);
       } else {
-        setSelectedModel("Not chosen yet");
+        setSelectedModel(llmOptions.gemini);
       }
     });
   }, []);
+
+  const handleModelChange = (newModel) => {
+    setSelectedModel(newModel);
+    chrome.storage.local.set({ [chromeStorageKeys.llmOption]: newModel });
+  };
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
@@ -62,9 +68,11 @@ export default function Hero() {
         chromeStorageKeys.geminiAPIKey,
       ]);
 
-      setSelectedModel(settings[chromeStorageKeys.llmOption]);
+      const currentModel =
+        settings[chromeStorageKeys.llmOption] || llmOptions.gemini;
+      setSelectedModel(currentModel);
 
-      if (settings[chromeStorageKeys.llmOption] === llmOptions.local) {
+      if (currentModel === llmOptions.local) {
         const transcript = await getTranscript(videoId);
 
         const resultLLM = await getSummaryFromLocalLLM(
@@ -81,14 +89,12 @@ export default function Hero() {
         result = JSON.parse(cleanedJson);
         console.log("Success:", result);
       } else {
-        const { gemini_api_key } = await chrome.storage.local.get(
-          chromeStorageKeys.llmOptionGeminiAPI,
-        );
-        if (!gemini_api_key) {
+        const geminiKey = settings[chromeStorageKeys.geminiAPIKey];
+        if (!geminiKey) {
           throw new Error("API Key not found");
         }
 
-        result = await getSummaryFromGeminiAPI(videoId, gemini_api_key);
+        result = await getSummaryFromGeminiAPI(videoId, geminiKey);
       }
 
       setSummary(result);
@@ -96,7 +102,7 @@ export default function Hero() {
       console.error("Analysis Error:", err);
       if (err.message && err.message.includes("API Key not found")) {
         if (confirm("API Key missing. Open Settings?")) {
-          chrome.runtime.sendMessage({ action: "OPEN_OPTIONS_PAGE" });
+          chrome.runtime.openOptionsPage();
         }
       } else if (
         err.message.includes("This model is currently experiencing high demand")
@@ -131,6 +137,42 @@ export default function Hero() {
           </div>
         </header>
 
+        {!summary && (
+          <footer className="future-footer">
+            <div
+              className="model-selector-trigger"
+              onClick={() => setIsModelListOpen(!isModelListOpen)}
+              style={{
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "4px",
+                padding: "24px 0px",
+              }}
+            >
+              <p style={{ margin: 0 }}>
+                Using model:{" "}
+                <span className="footer-highlight">
+                  {(selectedModel || "gemini").toUpperCase()}
+                </span>
+              </p>
+
+              {isModelListOpen ? (
+                <ChevronUp size={14} />
+              ) : (
+                <ChevronDown size={14} />
+              )}
+            </div>
+
+            {isModelListOpen && (
+              <ModelList
+                selectedModel={selectedModel}
+                handleModelChange={handleModelChange}
+              />
+            )}
+          </footer>
+        )}
         {!summary ? (
           <CallToAction isActive={isAnalyzing} onClickAction={handleAnalyze} />
         ) : (
@@ -140,12 +182,6 @@ export default function Hero() {
             setSummary={setSummary}
           />
         )}
-
-        <footer className="future-footer">
-          <p>
-            Using model: <span className="footer-highlight">{selectedModel}</span>
-          </p>
-        </footer>
       </div>
     </div>
   );
