@@ -143,7 +143,7 @@ export default function Hero() {
 
         <footer className="future-footer">
           <p>
-            Running: <span className="footer-highlight">{selectedModel}</span>
+            Using model: <span className="footer-highlight">{selectedModel}</span>
           </p>
         </footer>
       </div>

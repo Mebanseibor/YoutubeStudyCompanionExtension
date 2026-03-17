@@ -69,7 +69,7 @@
         set OLLAMA_ORIGINS=chrome-extension://*,http://localhost:*,https://www.youtube.com
         ```
 
-  - Serve Ollama: `ollama serve`
+    - Serve Ollama (From the same terminal): `ollama serve`
 
 ### With community server
 

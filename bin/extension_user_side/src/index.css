@@ -1,7 +1,22 @@
 @import "tailwindcss";
 
-html,
-body,
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#popup-root {
+  width: 350px;
+  max-height: 400px;
+  display: block;
+  background-color: white;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
 #options-root {
   height: 100vh;
   width: 100vw;
@@ -11,6 +26,8 @@ body,
 }
 
 :root {
+  width: 100%;
+  height: 100%;
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
