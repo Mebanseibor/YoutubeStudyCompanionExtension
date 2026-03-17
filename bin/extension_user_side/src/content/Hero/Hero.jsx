@@ -9,7 +9,6 @@ import { useState, useEffect } from "react";
 import {
   Layers,
   Sparkles,
-  Zap,
   ChevronLeft,
   Copy,
   Check,
@@ -22,6 +21,7 @@ import {
   chromeStorageKeys,
   llmOptions,
 } from "../../../constants/app.js";
+import CallToAction from "./CallToAction/CallToAction.jsx";
 
 export default function Hero() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -177,30 +177,7 @@ export default function Hero() {
         </header>
 
         {!summary ? (
-          <div className="dashboard-view">
-            <section className="vision-statement">
-              <p>
-                Transforming YouTube into a personalized learning powerhouse
-                with real-time AI processing.
-              </p>
-            </section>
-
-            <button
-              className={`hero-btn ${isAnalyzing ? "loading" : ""}`}
-              onClick={handleAnalyze}
-              disabled={isAnalyzing}
-            >
-              {isAnalyzing ? (
-                <>
-                  <Zap size={16} className="spin" />
-                  <span>Generating Flashcards...</span>
-                </>
-              ) : (
-                "Analyze & Generate Cards"
-              )}
-            </button>
-
-          </div>
+          <CallToAction isActive={isAnalyzing} onClickAction={handleAnalyze} />
         ) : (
           <div className="result-view">
             <div className="result-actions">
