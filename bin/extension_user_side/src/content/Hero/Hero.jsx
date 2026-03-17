@@ -21,6 +21,7 @@ export default function Hero() {
   const [summary, setSummary] = useState(null);
   const [selectedModel, setSelectedModel] = useState("Loading...");
   const [isModelListOpen, setIsModelListOpen] = useState(false);
+  const [showApiKeyError, setShowApiKeyError] = useState(false);
 
   useEffect(() => {
     chrome.storage.local.get([chromeStorageKeys.llmOption], (result) => {
@@ -38,6 +39,8 @@ export default function Hero() {
   };
 
   const handleAnalyze = async () => {
+    if (isAnalyzing) return;
+
     setIsAnalyzing(true);
     setSummary(null);
 
@@ -101,9 +104,7 @@ export default function Hero() {
     } catch (err) {
       console.error("Analysis Error:", err);
       if (err.message && err.message.includes("API Key not found")) {
-        if (confirm("API Key missing. Open Settings?")) {
-          chrome.runtime.openOptionsPage();
-        }
+        setShowApiKeyError(true);
       } else if (
         err.message.includes("This model is currently experiencing high demand")
       ) {
@@ -116,6 +117,19 @@ export default function Hero() {
       }
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const handleOpenOptions = () => {
+    if (
+      chrome.runtime &&
+      typeof chrome.runtime.openOptionsPage === "function"
+    ) {
+      chrome.runtime.openOptionsPage();
+    } else {
+      const optionsUrl = chrome.runtime.getURL("options.html");
+
+      window.open(optionsUrl);
     }
   };
 
@@ -181,6 +195,22 @@ export default function Hero() {
             onRetry={handleAnalyze}
             setSummary={setSummary}
           />
+        )}
+
+        {showApiKeyError && selectedModel === llmOptions.gemini && (
+          <div className="error-box" style={{ marginTop: "20px" }}>
+            <div className="error-icon-wrapper">
+              <p style={{ fontWeight: "bold", color: "var(--error-red)" }}>
+                API Key Required
+              </p>
+            </div>
+            <p style={{ fontSize: "12px", marginBottom: "15px" }}>
+              Please provide a Gemini API key in the settings to use this model.
+            </p>
+            <button className="hero-btn" onClick={handleOpenOptions}>
+              Open Settings
+            </button>
+          </div>
         )}
       </div>
     </div>

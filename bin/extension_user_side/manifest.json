@@ -4,6 +4,10 @@
   "version": "1.0.0",
   "permissions": ["storage", "activeTab", "tabs", "scripting"],
   "options_page": "options.html",
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
   "action": {
     "default_popup": "index.html"
   },

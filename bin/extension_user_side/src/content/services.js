@@ -22,6 +22,7 @@ export async function getSummaryFromGeminiAPI(videoId, geminiKey) {
     return { error: true, message: error.message };
   }
 }
+
 export async function getSummaryFromLocalLLM(prompt) {
   return new Promise((resolve) => {
     chrome.runtime.sendMessage(
